@@ -3,7 +3,8 @@ st.title("App Reviews Research: Understanding User Feedback and Sentiment")
 st.write("Hello, welcome to my first Streamlit app!")
 
 # Text input
-App = st.text_input("Enter the google play store app URL:")
+App = st.text_input("Enter the google play store app URL to scrape the reviews:")
+
 
 # Button
 if st.button("Submit"):
