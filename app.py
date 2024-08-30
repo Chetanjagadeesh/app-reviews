@@ -2,6 +2,8 @@ import streamlit as st
 import re
 import altair as alt
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 import plotly.express as px
 from wordcloud import WordCloud
 from review_scraper import get_app_reviews_dataframe, Sort
