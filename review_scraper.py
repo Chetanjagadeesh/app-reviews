@@ -185,7 +185,7 @@ def run_scraper(app_id):
     with tqdm(total=reviews_count, position=0, leave=True) as pbar:
         while len(result) < reviews_count:
             new_result, continuation_token = reviews(
-                app_id,
+                'app_id',
                 continuation_token=continuation_token,
                 lang='en', #The language of review
                 country='in', #Country for which you want to scrape
