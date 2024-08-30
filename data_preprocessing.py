@@ -6,7 +6,7 @@ def extract_app_id(url):
     # Use regular expression to find the app ID
     match = re.search(r'id=([^&]+)', url)
     if match:
-        return f'\'{match.group(1)}\''
+        return match.group(1)
     return None
 
 
