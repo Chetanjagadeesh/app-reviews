@@ -1,7 +1,7 @@
 import streamlit as st
 import re
 import altair as alt
-from review_scraper import run_scraper
+from review_scraper import get_app_reviews_dataframe, Sort
 from data_preprocessing import clean_dataframe , extract_app_id
 
 
@@ -31,7 +31,14 @@ st.sidebar.write(
 
 
 
-data = run_scraper(app_id)
+data = get_app_reviews_dataframe(
+        app_id,
+        reviews_count=25000,
+        lang='en',
+        country='in',
+        sort=Sort.NEWEST,
+        sleep_milliseconds=100  # Add a small delay between requests
+    )
 
 clean_data= clean_dataframe(data)
 
