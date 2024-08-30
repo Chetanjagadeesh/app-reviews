@@ -1,7 +1,7 @@
 import streamlit as st
 import re
 import altair as alt
-from review_scraper import review_scraper
+from review_scraper import run_scraper
 from data_preprocessing import data_preprocessing , extract_app_id
 
 
