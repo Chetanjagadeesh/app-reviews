@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 from wordcloud import WordCloud
 from review_scraper import get_app_reviews_dataframe, Sort
 from data_preprocessing import clean_dataframe , extract_app_id
