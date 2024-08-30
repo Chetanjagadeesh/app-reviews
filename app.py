@@ -59,8 +59,19 @@ st.sidebar.write(
 )
 
 
-rating_counts = clean_data['score'].value_counts().sort_index()
+# Count occurrences of each rating
+rating_counts = clean_data['score'].value_counts().reset_index()
+rating_counts.columns = ['score', 'count']
+rating_counts = rating_counts.sort_values(by='score')  # Sort by rating value
 
-# Plotting the bar graph
-st.bar_chart(rating_counts,x="Rating", y="Count")
+# Create an Altair bar chart
+chart = alt.Chart(rating_counts).mark_bar().encode(
+    x=alt.X('score:O', title='Rating'),
+    y=alt.Y('count:Q', title='Count'),
+    tooltip=['score', 'count']  # Add tooltips for interactivity
+).properties(
+    title='Rating Count Chart'
+)
 
+# Display the chart in Streamlit
+st.altair_chart(chart, use_container_width=True)
