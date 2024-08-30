@@ -2,6 +2,7 @@ import streamlit as st
 import re
 import altair as alt
 import matplotlib.pyplot as plt
+import plotly.express as px
 from review_scraper import get_app_reviews_dataframe, Sort
 from data_preprocessing import clean_dataframe , extract_app_id
 
@@ -59,20 +60,20 @@ st.sidebar.write(
 )
 
 
-if not clean_data.empty:
-    
-    rating_counts = clean_data['score'].value_counts().reset_index()
-    rating_counts.columns = ['score', 'count']
-    rating_counts = rating_counts.sort_values(by='score')  # Sort by rating value
 
-    # Create an Altair bar chart
-    chart = alt.Chart(rating_counts).mark_bar().encode(
-        x=alt.X('score:O', title='Rating'),
-        y=alt.Y('count:Q', title='Count'),
-        tooltip=['score', 'count']  # Add tooltips for interactivity
-    ).properties(
-        title='Rating Count Chart'
+score_counts = clean_data['score'].value_counts().reset_index()
+score_counts.columns = ['score', 'count']
+
+# Check if DataFrame is not empty
+if not score_counts.empty:
+    # Create a bar chart with Plotly
+    fig = px.bar(score_counts, x='score', y='count', title='Score Occurrences')
+    fig.update_layout(
+        xaxis_title='Ratings',
+        yaxis_title='Count'
     )
 
-    # Display the chart in Streamlit
-    st.altair_chart(chart, use_container_width=True)
+    # Plot the bar chart
+    st.plotly_chart(fig)
+else:
+   st.write("No data available to display the chart.")
