@@ -50,20 +50,26 @@ def _fetch_review_items(
     filter_device_with: Optional[int],
     pagination_token: Optional[str],
 ):
-    dom = post(
-        url,
-        Formats.Reviews.build_body(
-            app_id,
-            sort,
-            count,
-            "null" if filter_score_with is None else filter_score_with,
-            "null" if filter_device_with is None else filter_device_with,
-            pagination_token,
-        ),
-        {"content-type": "application/x-www-form-urlencoded"},
+    body = Formats.Reviews.build_body(
+        app_id,
+        sort,
+        count,
+        "null" if filter_score_with is None else filter_score_with,
+        "null" if filter_device_with is None else filter_device_with,
+        pagination_token,
     )
-    match = json.loads(Regex.REVIEWS.findall(dom)[0])
 
+    try:
+        dom = post(
+            url,
+            body,
+            {"content-type": "application/x-www-form-urlencoded"},
+        )
+    except ExtraHTTPError as e:
+        print(f"HTTP error occurred: {e}")
+        return [], None  # Return empty result and None token on error
+
+    match = json.loads(Regex.REVIEWS.findall(dom)[0])
     return json.loads(match[0][2])[0], json.loads(match[0][2])[-2][-1]
 
 
