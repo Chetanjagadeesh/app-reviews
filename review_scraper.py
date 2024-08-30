@@ -4,7 +4,7 @@ from google_play_scraper.constants.element import ElementSpecs
 from google_play_scraper.constants.regex import Regex
 from google_play_scraper.constants.request import Formats
 from google_play_scraper.utils.request import post
-
+import streamlit as st
 import pandas as pd
 from datetime import datetime
 from tqdm import tqdm
@@ -203,24 +203,33 @@ def get_app_reviews_dataframe(
     result = []
     continuation_token = None
 
-    with tqdm(total=reviews_count, position=0, leave=True) as pbar:
-        while len(result) < reviews_count:
-            new_result, continuation_token = reviews(
-                app_id,
-                continuation_token=continuation_token,
-                lang=lang,
-                country=country,
-                sort=sort,
-                filter_score_with=filter_score_with,
-                filter_device_with=filter_device_with,
-                count=MAX_COUNT_EACH_FETCH
-            )
-            if not new_result:
-                break
-            result.extend(new_result)
-            pbar.update(len(new_result))
+    progress_bar = st.progress(0)
+    status_text = st.empty()
 
-            if sleep_milliseconds:
-                sleep(sleep_milliseconds / 1000)
+    while len(result) < reviews_count:
+        new_result, continuation_token = reviews(
+            app_id,
+            continuation_token=continuation_token,
+            lang=lang,
+            country=country,
+            sort=sort,
+            filter_score_with=filter_score_with,
+            filter_device_with=filter_device_with,
+            count=MAX_COUNT_EACH_FETCH
+        )
+        if not new_result:
+            break
+        result.extend(new_result)
+        
+        # Update progress
+        progress = len(result) / reviews_count
+        progress_bar.progress(min(progress, 1.0))
+        status_text.text(f"Fetched {len(result)} reviews")
+
+        if sleep_milliseconds:
+            sleep(sleep_milliseconds / 1000)
+
+    progress_bar.empty()
+    status_text.empty()
 
     return pd.DataFrame(result)
