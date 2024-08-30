@@ -18,7 +18,7 @@ if st.button("Fetch Reviews"):
             
   df = get_app_reviews_dataframe(
                 app_id,
-                reviews_count=reviews_count,
+                reviews_count=25000,
                 lang='en',
                 country='in',
                 sort=Sort.NEWEST,
