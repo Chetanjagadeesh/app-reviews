@@ -65,7 +65,6 @@ rating_counts = clean_data['score'].value_counts().sort_index()
 st.bar_chart(rating_counts)
 
 # Alternatively, using matplotlib for more customization
-import matplotlib.pyplot as plt
 
 plt.figure(figsize=(10, 5))
 plt.bar(rating_counts.index, rating_counts.values, color='skyblue')
