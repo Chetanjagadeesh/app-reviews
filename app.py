@@ -4,13 +4,6 @@ import altair as alt
 from review_scraper import review_scraper
 from data_preprocessing import data_preprocessing
 
-st.title("App Reviews Research: Understanding User Feedback and Sentiment")
-st.write("Hello, welcome to my first Streamlit app!")
-
-# Text input
-App = st.text_input("Enter the google play store app URL to scrape the reviews:")
-
-
 
 def extract_app_id(url):
     # Use regular expression to find the app ID
@@ -19,9 +12,14 @@ def extract_app_id(url):
         return match.group(1)
     return None
 
+
+st.title("App Reviews Research: Understanding User Feedback and Sentiment")
+
+# Text input
+App = st.text_input("Enter the google play store app URL to scrape the reviews:")
+
 app_id=extract_app_id(App)
 
-# Button
 if st.button("Submit"):
     st.write(f"The submitted App id is {app_id}")
 
@@ -38,6 +36,8 @@ st.sidebar.write("---")
 st.sidebar.write(
     "To learn more about how this project was done, visit [our website](https://www.yourwebsite.com)."
 )
+
+
 
 data = review_scraper(app_id)
 
