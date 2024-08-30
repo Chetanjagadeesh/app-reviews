@@ -77,30 +77,26 @@ def reviews(
     filter_device_with: int = None,
     continuation_token: _ContinuationToken = None,
 ) -> Tuple[List[dict], _ContinuationToken]:
+
     sort = sort.value
+    token = None  # Initialize token to None
 
     if continuation_token is not None:
         token = continuation_token.token
-
         if token is None:
             return (
                 [],
                 continuation_token,
             )
-
         lang = continuation_token.lang
         country = continuation_token.country
         sort = continuation_token.sort
         count = continuation_token.count
         filter_score_with = continuation_token.filter_score_with
         filter_device_with = continuation_token.filter_device_with
-    else:
-        token = None
 
     url = Formats.Reviews.build(lang=lang, country=country)
-
     _fetch_count = count
-
     result = []
 
     while True:
@@ -121,10 +117,10 @@ def reviews(
                 token,
             )
         except (TypeError, IndexError):
-            #funnan MOD start
-            token = continuation_token.token
+            # Handle the case where fetching reviews fails
+            if continuation_token is not None:
+                token = continuation_token.token
             continue
-            #MOD end
 
         for review in review_items:
             result.append(
@@ -146,7 +142,6 @@ def reviews(
             token, lang, country, sort, count, filter_score_with, filter_device_with
         ),
     )
-
 
 def reviews_all(app_id: str, sleep_milliseconds: int = 0, **kwargs) -> list:
     kwargs.pop("count", None)
@@ -187,22 +182,8 @@ def get_app_reviews_dataframe(
     filter_device_with: Optional[int] = None,
     sleep_milliseconds: int = 0
 ) -> pd.DataFrame:
-    """
-    Fetch app reviews and return them as a pandas DataFrame.
-
-    :param app_id: The ID of the app to fetch reviews for.
-    :param reviews_count: The number of reviews to fetch (default 25000).
-    :param lang: The language of the reviews (default 'en').
-    :param country: The country for which to fetch reviews (default 'in').
-    :param sort: The sort order for reviews (default Sort.NEWEST).
-    :param filter_score_with: Filter reviews by score (default None).
-    :param filter_device_with: Filter reviews by device (default None).
-    :param sleep_milliseconds: Sleep duration between requests in milliseconds (default 0).
-    :return: A pandas DataFrame containing the app reviews.
-    """
     result = []
     continuation_token = None
-
     progress_bar = st.progress(0)
     status_text = st.empty()
 
@@ -215,12 +196,14 @@ def get_app_reviews_dataframe(
             sort=sort,
             filter_score_with=filter_score_with,
             filter_device_with=filter_device_with,
-            count=MAX_COUNT_EACH_FETCH
+            count=MAX_COUNT_EACH_FETCH,
         )
+
         if not new_result:
             break
+
         result.extend(new_result)
-        
+
         # Update progress
         progress = len(result) / reviews_count
         progress_bar.progress(min(progress, 1.0))
@@ -231,5 +214,4 @@ def get_app_reviews_dataframe(
 
     progress_bar.empty()
     status_text.empty()
-
     return pd.DataFrame(result)
