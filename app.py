@@ -25,7 +25,7 @@ if st.button("Fetch Reviews"):
                 sleep_milliseconds=100
             )
             
-            st.write(f"Total reviews fetched: {len(df)}")
+  st.write(f"Total reviews fetched: {len(df)}")
             
   average_score = df['score'].mean()
   st.write(f"\nAverage Rating: {average_score:.2f}")
