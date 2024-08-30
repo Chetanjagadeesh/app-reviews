@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from wordcloud import WordCloud
 from review_scraper import get_app_reviews_dataframe, Sort
 from data_preprocessing import clean_dataframe , extract_app_id
+from transformers import pipeline
 
 
 st.title("App Reviews Research: Understanding User Feedback and Sentiment")
@@ -82,12 +83,13 @@ if not score_counts.empty:
 else:
    st.write("No data available to display the chart.")
 
-combined_text = clean_data['content'].str.cat(sep=' ') 
+negative_rated_combined_text = clean_data[clean_data['score']<3]['content'].str.cat(sep=' ') 
+positive_rated_combined_text = clean_data[clean_data['score']<3]['content'].str.cat(sep=' ') 
 
-wordcloud = WordCloud(width=800, height=400, background_color='white').generate(combined_text)
+wordcloud_neg = WordCloud(width=800, height=400, background_color='white').generate(negative_rated_combined_text)
 
 # Convert the word cloud to an image
-image = wordcloud.to_image()
+image = wordcloud_neg.to_image()
 
 # Convert the image to a numpy array
 img_array = np.array(image)
@@ -101,7 +103,7 @@ fig.add_trace(
 
 # Set layout for the plot
 fig.update_layout(
-    title='Reviews Word Cloud',
+    title='Reviews Word Cloud for negative sentiment',
     xaxis=dict(showgrid=False, zeroline=False),
     yaxis=dict(showgrid=False, zeroline=False),
     margin=dict(l=0, r=0, t=30, b=0)
@@ -109,3 +111,30 @@ fig.update_layout(
 
 # Display the plot in Streamlit
 st.plotly_chart(fig)
+
+wordcloud_pos = WordCloud(width=800, height=400, background_color='white').generate(positive_rated_combined_text)
+
+# Convert the word cloud to an image
+image_p = wordcloud_neg.to_image()
+
+# Convert the image to a numpy array
+img_array = np.array(image_p)
+
+# Plot the image with Plotly
+fig = go.Figure()
+
+fig.add_trace(
+    go.Image(z=img_array)
+)
+
+# Set layout for the plot
+fig.update_layout(
+    title='Reviews Word Cloud for positive sentiment',
+    xaxis=dict(showgrid=False, zeroline=False),
+    yaxis=dict(showgrid=False, zeroline=False),
+    margin=dict(l=0, r=0, t=30, b=0)
+)
+
+# Display the plot in Streamlit
+st.plotly_chart(fig)
+
