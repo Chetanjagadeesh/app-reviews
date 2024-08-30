@@ -1,6 +1,7 @@
 import streamlit as st
 import re
 import altair as alt
+import matplotlib.pyplot as plt
 from review_scraper import get_app_reviews_dataframe, Sort
 from data_preprocessing import clean_dataframe , extract_app_id
 
@@ -58,7 +59,22 @@ st.sidebar.write(
 )
 
 
-# clean_data= clean_dataframe(df)
+rating_counts = df['score'].value_counts().sort_index()
+
+# Plotting the bar graph
+st.bar_chart(rating_counts)
+
+# Alternatively, using matplotlib for more customization
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 5))
+plt.bar(rating_counts.index, rating_counts.values, color='skyblue')
+plt.xlabel('Ratings')
+plt.ylabel('Number of Reviews')
+plt.title('Number of Reviews by Rating')
+plt.xticks(rating_counts.index)  # Set x-ticks to the ratings
+st.pyplot(plt)
+
 
 
 # # Count occurrences of each rating
