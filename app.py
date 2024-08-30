@@ -30,9 +30,11 @@ if st.button("Fetch Reviews"):
             
   average_score = df['score'].mean()
   st.write(f"\nAverage Rating: {average_score:.2f}")
-            
+
+  clean_data= clean_dataframe(df)
+
   # Option to download the full DataFrame
-  csv = df.to_csv(index=False)
+  csv = clean_data[['reviewid','content','score','appVersion']].to_csv(index=False)
   st.download_button(
       label="Download full data as CSV",
       data=csv,
@@ -56,7 +58,7 @@ st.sidebar.write(
 )
 
 
-clean_data= clean_dataframe(df)
+# clean_data= clean_dataframe(df)
 
 
 # Count occurrences of each rating
