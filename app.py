@@ -56,17 +56,7 @@ st.sidebar.write(
 )
 
 
-
-data = get_app_reviews_dataframe(
-        app_id,
-        reviews_count=25000,
-        lang='en',
-        country='in',
-        sort=Sort.NEWEST,
-        sleep_milliseconds=100  # Add a small delay between requests
-    )
-
-clean_data= clean_dataframe(data)
+clean_data= clean_dataframe(df)
 
 
 # Count occurrences of each rating
