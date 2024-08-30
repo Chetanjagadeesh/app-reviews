@@ -31,9 +31,9 @@ st.sidebar.write(
 
 
 
-data = review_scraper(app_id)
+data = run_scraper(app_id)
 
-clean_data= data_preprocessing(data)
+clean_data= clean_dataframe(data)
 
 
 # Count occurrences of each rating
