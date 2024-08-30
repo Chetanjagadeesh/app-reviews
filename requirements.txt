@@ -5,3 +5,4 @@ pandas
 matplotlib
 altair
 plotly
+wordcloud

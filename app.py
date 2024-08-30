@@ -3,6 +3,7 @@ import re
 import altair as alt
 import matplotlib.pyplot as plt
 import plotly.express as px
+from wordcloud import WordCloud
 from review_scraper import get_app_reviews_dataframe, Sort
 from data_preprocessing import clean_dataframe , extract_app_id
 
@@ -67,7 +68,7 @@ score_counts.columns = ['score', 'count']
 # Check if DataFrame is not empty
 if not score_counts.empty:
     # Create a bar chart with Plotly
-    fig = px.bar(score_counts, x='score', y='count', title='Score Occurrences')
+    fig = px.bar(score_counts, x='score', y='count', title='Rating Distributions')
     fig.update_layout(
         xaxis_title='Ratings',
         yaxis_title='Count'
@@ -77,3 +78,31 @@ if not score_counts.empty:
     st.plotly_chart(fig)
 else:
    st.write("No data available to display the chart.")
+
+combined_text = clean_data['content'].str.cat(sep=' ') 
+
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(combined_text)
+
+# Convert the word cloud to an image
+image = wordcloud.to_image()
+
+# Convert the image to a numpy array
+img_array = np.array(image)
+
+# Plot the image with Plotly
+fig = go.Figure()
+
+fig.add_trace(
+    go.Image(z=img_array)
+)
+
+# Set layout for the plot
+fig.update_layout(
+    title='Reviews Word Cloud',
+    xaxis=dict(showgrid=False, zeroline=False),
+    yaxis=dict(showgrid=False, zeroline=False),
+    margin=dict(l=0, r=0, t=30, b=0)
+)
+
+# Display the plot in Streamlit
+st.plotly_chart(fig)
