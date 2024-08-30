@@ -12,9 +12,34 @@ App = st.text_input("Enter the google play store app URL to scrape the reviews:"
 
 app_id=extract_app_id(App)
 
-if st.button("Submit"):
-    st.write(f"The submitted App id is {app_id}")
-
+ if st.button("Fetch Reviews"):
+        if app_id:
+            st.write(f"Fetching reviews for {app_id}...")
+            
+            df = get_app_reviews_dataframe(
+                app_id,
+                reviews_count=reviews_count,
+                lang='en',
+                country='in',
+                sort=Sort.NEWEST,
+                sleep_milliseconds=100
+            )
+            
+            st.write(f"Total reviews fetched: {len(df)}")
+            
+            average_score = df['score'].mean()
+            st.write(f"\nAverage Rating: {average_score:.2f}")
+            
+            # Option to download the full DataFrame
+            csv = df.to_csv(index=False)
+            st.download_button(
+                label="Download full data as CSV",
+                data=csv,
+                file_name=f"{app_id}_reviews.csv",
+                mime="text/csv",
+            )
+        else:
+            st.error("Please enter an app ID")
 
 # Sidebar content
 st.sidebar.title("Leveraging User Insights for Product Innovation")
