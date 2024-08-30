@@ -2,4 +2,5 @@ google-play-scraper
 tqdm 
 streamlit
 pandas
-
+matplotlib
+altair
