@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 from wordcloud import WordCloud
 from review_scraper import get_app_reviews_dataframe, Sort
 from data_preprocessing import clean_dataframe , extract_app_id
-from transformers import pipeline
+
 
 
 st.title("App Reviews Research: Understanding User Feedback and Sentiment")

@@ -7,5 +7,3 @@ altair
 plotly
 wordcloud
 numpy
-transformers 
-torch
