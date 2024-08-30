@@ -59,7 +59,7 @@ st.sidebar.write(
 )
 
 
-if clean_data is not null:
+if not clean_data.empty:
     
     rating_counts = clean_data['score'].value_counts().reset_index()
     rating_counts.columns = ['score', 'count']
