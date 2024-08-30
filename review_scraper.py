@@ -177,27 +177,50 @@ def reviews_all(app_id: str, sleep_milliseconds: int = 0, **kwargs) -> list:
 
 
 
-def run_scraper(app_id):
+def get_app_reviews_dataframe(
+    app_id: str,
+    reviews_count: int = 25000,
+    lang: str = 'en',
+    country: str = 'in',
+    sort: Sort = Sort.NEWEST,
+    filter_score_with: Optional[int] = None,
+    filter_device_with: Optional[int] = None,
+    sleep_milliseconds: int = 0
+) -> pd.DataFrame:
+    """
+    Fetch app reviews and return them as a pandas DataFrame.
 
+    :param app_id: The ID of the app to fetch reviews for.
+    :param reviews_count: The number of reviews to fetch (default 25000).
+    :param lang: The language of the reviews (default 'en').
+    :param country: The country for which to fetch reviews (default 'in').
+    :param sort: The sort order for reviews (default Sort.NEWEST).
+    :param filter_score_with: Filter reviews by score (default None).
+    :param filter_device_with: Filter reviews by device (default None).
+    :param sleep_milliseconds: Sleep duration between requests in milliseconds (default 0).
+    :return: A pandas DataFrame containing the app reviews.
+    """
     result = []
     continuation_token = None
 
     with tqdm(total=reviews_count, position=0, leave=True) as pbar:
         while len(result) < reviews_count:
             new_result, continuation_token = reviews(
-                'app_id',
+                app_id,
                 continuation_token=continuation_token,
-                lang='en', #The language of review
-                country='in', #Country for which you want to scrape
-                sort=Sort.NEWEST,
-                filter_score_with=None,
-                count=199 #No need to change this
+                lang=lang,
+                country=country,
+                sort=sort,
+                filter_score_with=filter_score_with,
+                filter_device_with=filter_device_with,
+                count=MAX_COUNT_EACH_FETCH
             )
             if not new_result:
                 break
             result.extend(new_result)
             pbar.update(len(new_result))
 
-    data=pd.DataFrame(result)
+            if sleep_milliseconds:
+                sleep(sleep_milliseconds / 1000)
 
-    return data
+    return pd.DataFrame(result)
