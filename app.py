@@ -39,7 +39,7 @@ if st.button("Fetch Reviews"):
       mime="text/csv",
   )
 else:
-  st.error("Please enter an app ID")
+   st.error("Please enter an app ID")
 
 # Sidebar content
 st.sidebar.title("Leveraging User Insights for Product Innovation")
