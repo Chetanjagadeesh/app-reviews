@@ -2,15 +2,7 @@ import streamlit as st
 import re
 import altair as alt
 from review_scraper import review_scraper
-from data_preprocessing import data_preprocessing
-
-
-def extract_app_id(url):
-    # Use regular expression to find the app ID
-    match = re.search(r'id=([^&]+)', url)
-    if match:
-        return match.group(1)
-    return None
+from data_preprocessing import data_preprocessing , extract_app_id
 
 
 st.title("App Reviews Research: Understanding User Feedback and Sentiment")

@@ -2,6 +2,13 @@ import pandas as pd
 import numpy as np
 import re
 
+def extract_app_id(url):
+    # Use regular expression to find the app ID
+    match = re.search(r'id=([^&]+)', url)
+    if match:
+        return match.group(1)
+    return None
+
 
 def clean_dataframe(data):
 
