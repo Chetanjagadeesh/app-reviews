@@ -10,10 +10,11 @@ st.title("App Reviews Research: Understanding User Feedback and Sentiment")
 # Text input
 App = st.text_input("Enter the google play store app URL to scrape the reviews:")
 
-app_id=extract_app_id(App)
+# app_id=extract_app_id(App)
 
 if st.button("Fetch Reviews"):
  if app_id:
+  app_id=extract_app_id(App)
   st.write(f"Fetching reviews for {app_id}...")
             
   df = get_app_reviews_dataframe(
