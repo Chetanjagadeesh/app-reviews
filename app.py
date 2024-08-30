@@ -34,7 +34,7 @@ if st.button("Fetch Reviews"):
   clean_data= clean_dataframe(df)
 
   # Option to download the full DataFrame
-  csv = clean_data[['reviewid','content','score','appVersion']].to_csv(index=False)
+  csv = clean_data[['reviewid','content','score','appversion']].to_csv(index=False)
   st.download_button(
       label="Download full data as CSV",
       data=csv,
