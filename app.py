@@ -83,41 +83,58 @@ if not score_counts.empty:
 else:
    st.write("No data available to display the chart.")
 
-negative_rated_combined_text = clean_data[clean_data['score'] < 3]['content'].str.cat(sep=' ')
-positive_rated_combined_text = clean_data[clean_data['score'] > 3]['content'].str.cat(sep=' ')
+negative_rated_combined_text = clean_data[clean_data['score']<3]['content'].str.cat(sep=' ') 
+positive_rated_combined_text = clean_data[clean_data['score']>3]['content'].str.cat(sep=' ') 
 
-# Generate word clouds
 wordcloud_neg = WordCloud(width=800, height=400, background_color='white').generate(negative_rated_combined_text)
+
+# Convert the word cloud to an image
+image = wordcloud_neg.to_image()
+
+# Convert the image to a numpy array
+img_array = np.array(image)
+
+# Plot the image with Plotly
+fig = go.Figure()
+
+fig.add_trace(
+    go.Image(z=img_array)
+)
+
+# Set layout for the plot
+fig.update_layout(
+    title='Reviews Word Cloud for negative sentiment',
+    xaxis=dict(showgrid=False, zeroline=False),
+    yaxis=dict(showgrid=False, zeroline=False),
+    margin=dict(l=0, r=0, t=30, b=0)
+)
+
+# Display the plot in Streamlit
+st.plotly_chart(fig)
+
 wordcloud_pos = WordCloud(width=800, height=400, background_color='white').generate(positive_rated_combined_text)
 
-# Convert word clouds to images and then to numpy arrays
-img_array_neg = np.array(wordcloud_neg.to_image())
-img_array_pos = np.array(wordcloud_pos.to_image())
+# Convert the word cloud to an image
+image_p = wordcloud_neg.to_image()
 
-# Create two columns for side-by-side display
-col1, col2 = st.columns(2)
+# Convert the image to a numpy array
+img_array = np.array(image_p)
 
-# Plot negative sentiment word cloud
-with col1:
-    fig_neg = go.Figure()
-    fig_neg.add_trace(go.Image(z=img_array_neg))
-    fig_neg.update_layout(
-        title='Reviews Word Cloud for Negative Sentiment',
-        xaxis=dict(showgrid=False, zeroline=False),
-        yaxis=dict(showgrid=False, zeroline=False),
-        margin=dict(l=0, r=0, t=30, b=0)
-    )
-    st.plotly_chart(fig_neg, use_container_width=True)
+# Plot the image with Plotly
+fig = go.Figure()
 
-# Plot positive sentiment word cloud
-with col2:
-    fig_pos = go.Figure()
-    fig_pos.add_trace(go.Image(z=img_array_pos))
-    fig_pos.update_layout(
-        title='Reviews Word Cloud for Positive Sentiment',
-        xaxis=dict(showgrid=False, zeroline=False),
-        yaxis=dict(showgrid=False, zeroline=False),
-        margin=dict(l=0, r=0, t=30, b=0)
-    )
-    st.plotly_chart(fig_pos, use_container_width=True)
+fig.add_trace(
+    go.Image(z=img_array)
+)
+
+# Set layout for the plot
+fig.update_layout(
+    title='Reviews Word Cloud for positive sentiment',
+    xaxis=dict(showgrid=False, zeroline=False),
+    yaxis=dict(showgrid=False, zeroline=False),
+    margin=dict(l=0, r=0, t=30, b=0)
+)
+
+# Display the plot in Streamlit
+st.plotly_chart(fig)
 
