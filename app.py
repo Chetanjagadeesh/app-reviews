@@ -59,7 +59,7 @@ st.sidebar.write(
 )
 
 
-rating_counts = df['score'].value_counts().sort_index()
+rating_counts = clean_data['score'].value_counts().sort_index()
 
 # Plotting the bar graph
 st.bar_chart(rating_counts)
