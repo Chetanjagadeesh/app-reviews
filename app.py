@@ -106,7 +106,7 @@ fig.update_layout(
     title='Reviews Word Cloud for negative sentiment',
     xaxis=dict(showgrid=False, zeroline=False),
     yaxis=dict(showgrid=False, zeroline=False),
-    margin=dict(l=0, r=0, t=30, b=0)
+   
 )
 
 # Display the plot in Streamlit
@@ -132,7 +132,7 @@ fig.update_layout(
     title='Reviews Word Cloud for positive sentiment',
     xaxis=dict(showgrid=False, zeroline=False),
     yaxis=dict(showgrid=False, zeroline=False),
-    margin=dict(l=0, r=0, t=30, b=0)
+   
 )
 
 # Display the plot in Streamlit
