@@ -196,20 +196,20 @@ from together import Together
 if 'clean_data' not in st.session_state:
     st.session_state.clean_data = None
 
-# Function to create embeddings (if needed for Together AI)
+# Function to create embeddings (if Together AI provides this functionality)
 def create_embeddings(dataframe):
     texts = dataframe.apply(lambda row: ' '.join(row.values.astype(str)), axis=1).tolist()
     return texts
 
 # Function to set up the vector store (if needed for Together AI)
-def setup_vector_store(dataframe):
+def setup_vector_store(dataframe, api_key):
     texts = create_embeddings(dataframe)
     # Assuming Together AI provides a way to create embeddings
     # This is a placeholder for actual Together AI embedding logic
-    embeddings = []  # Replace with actual embedding logic
+    embeddings = []  # Replace with actual Together AI embedding logic
     return embeddings
 
-# Function to create the conversational retrieval chain
+# Function to create the conversational retrieval chain using Together AI
 def make_chain(dataframe, api_key):
     client = Together(api_key=api_key)
     # Assuming Together AI has a similar chain setup
