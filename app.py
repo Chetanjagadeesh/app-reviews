@@ -1,140 +1,302 @@
+# import streamlit as st
+# import pandas as pd
+# from review_scraper import get_app_reviews_dataframe, Sort
+# from data_preprocessing import clean_dataframe, extract_app_id
+# from langchain_openai import ChatOpenAI
+# from langchain.chains import ConversationalRetrievalChain
+# from langchain.embeddings import OpenAIEmbeddings
+# from langchain.vectorstores import Chroma
+
+# # Initialize session state for clean_data
+# if 'clean_data' not in st.session_state:
+#     st.session_state.clean_data = None
+
+# # Function to create embeddings
+# def create_embeddings(dataframe, api_key):
+#     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+#     # Assuming each row in the DataFrame can be represented as a single string
+#     texts = dataframe.apply(lambda row: ' '.join(row.values.astype(str)), axis=1).tolist()
+#     return texts, embeddings.embed_documents(texts)
+
+# # Function to set up the vector store
+# def setup_vector_store(dataframe, api_key):
+#     texts, embeddings = create_embeddings(dataframe, api_key)
+#     vector_store = Chroma.from_texts(texts, embeddings)
+#     return vector_store.as_retriever()
+
+# # Function to create the conversational retrieval chain
+# def make_chain(dataframe, api_key):
+#     model = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.0, openai_api_key=api_key)
+#     retriever = setup_vector_store(dataframe, api_key)
+#     chain = ConversationalRetrievalChain.from_llm(model, retriever=retriever)
+#     return chain
+
+# # Streamlit UI
+# st.title("App Reviews Research: Understanding User Feedback and Sentiment")
+
+# # Text input for app URL
+# App = st.text_input("Enter the Google Play Store app URL to scrape the reviews:")
+
+# if st.button("Fetch Reviews"):
+#     app_id = extract_app_id(App)
+#     if app_id:
+#         st.write(f"Fetching reviews for {app_id}...")
+        
+#         df = get_app_reviews_dataframe(
+#             app_id,
+#             reviews_count=25000,
+#             lang='en',
+#             country='in',
+#             sort=Sort.NEWEST,
+#             sleep_milliseconds=100
+#         )
+        
+#         st.write(f"Total reviews fetched: {len(df)}")
+        
+#         average_score = df['score'].mean()
+#         st.write(f"\nAverage Rating: {average_score:.2f}")
+
+#         # Clean the data and store it in session state
+#         st.session_state.clean_data = clean_dataframe(df)
+
+#         # Option to download the full DataFrame
+#         csv = st.session_state.clean_data[['reviewid', 'content', 'score', 'appversion']].to_csv(index=False)
+#         st.download_button(
+#             label="Download full data as CSV",
+#             data=csv,
+#             file_name=f"{app_id}_reviews.csv",
+#             mime="text/csv",
+#         )
+#     else:
+#         st.error("Please enter a valid app ID")
+
+# # User input for API key (masked)
+# user_api_key = st.text_input("Enter your OpenAI API Key (will be masked):", type="password")
+
+# # User input for question
+# question = st.text_input("Ask your question:")
+
+# if st.button("Submit"):
+#     if question and user_api_key:
+#         if st.session_state.clean_data is not None:  # Check if clean_data is defined
+#             chain = make_chain(st.session_state.clean_data, user_api_key)  # Use the user-provided API key
+#             response = chain({"question": question, "chat_history": ""})
+#             st.write(f"Chatbot response: {response['answer']}")
+#         else:
+#             st.warning("Please fetch reviews first.")
+#     else:
+#         st.warning("Please enter both your API key and a question.")
+
+# import streamlit as st
+# import pandas as pd
+# from review_scraper import get_app_reviews_dataframe, Sort
+# from data_preprocessing import clean_dataframe, extract_app_id
+# from langchain_openai import ChatOpenAI
+# from langchain.chains import ConversationalRetrievalChain
+# from langchain.embeddings import OpenAIEmbeddings
+# from langchain.vectorstores import Chroma
+# from langchain.memory import ConversationBufferMemory
+
+# # Initialize session state
+# if 'clean_data' not in st.session_state:
+#     st.session_state.clean_data = None
+# if 'chat_history' not in st.session_state:
+#     st.session_state.chat_history = []
+# if 'chain' not in st.session_state:
+#     st.session_state.chain = None
+
+# # Function to create embeddings
+# def create_embeddings(dataframe, api_key):
+#     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+#     texts = dataframe.apply(lambda row: ' '.join(row.values.astype(str)), axis=1).tolist()
+#     return texts, embeddings
+
+# # Function to set up the vector store
+# def setup_vector_store(dataframe, api_key):
+#     texts, embeddings = create_embeddings(dataframe, api_key)
+#     vector_store = Chroma.from_texts(texts, embeddings)
+#     return vector_store.as_retriever()
+
+# # Function to create the conversational retrieval chain
+# def make_chain(dataframe, api_key):
+#     model = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.0, openai_api_key=api_key)
+#     retriever = setup_vector_store(dataframe, api_key)
+#     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+#     chain = ConversationalRetrievalChain.from_llm(model, retriever=retriever, memory=memory)
+#     return chain
+
+# # Streamlit UI
+# st.title("App Reviews Research: Understanding User Feedback and Sentiment")
+
+# # Text input for app URL
+# App = st.text_input("Enter the Google Play Store app URL to scrape the reviews:")
+
+# if st.button("Fetch Reviews"):
+#     app_id = extract_app_id(App)
+#     if app_id:
+#         st.write(f"Fetching reviews for {app_id}...")
+#         df = get_app_reviews_dataframe(
+#             app_id,
+#             reviews_count=2000,
+#             lang='en',
+#             country='in',
+#             sort=Sort.NEWEST,
+#             sleep_milliseconds=100
+#         )
+#         st.write(f"Total reviews fetched: {len(df)}")
+#         average_score = df['score'].mean()
+#         st.write(f"\nAverage Rating: {average_score:.2f}")
+        
+#         # Clean the data and store it in session state
+#         st.session_state.clean_data = clean_dataframe(df)
+        
+#         # Option to download the full DataFrame
+#         csv = st.session_state.clean_data[['reviewid', 'content', 'score', 'appversion']].to_csv(index=False)
+#         st.download_button(
+#             label="Download full data as CSV",
+#             data=csv,
+#             file_name=f"{app_id}_reviews.csv",
+#             mime="text/csv",
+#         )
+#     else:
+#         st.error("Please enter a valid app ID")
+
+# # User input for API key (masked)
+# user_api_key = st.text_input("Enter your OpenAI API Key (will be masked):", type="password")
+
+# if user_api_key and st.session_state.clean_data is not None:
+#     if st.session_state.chain is None:
+#         st.session_state.chain = make_chain(st.session_state.clean_data, user_api_key)
+
+# # Display chat history
+# for message in st.session_state.chat_history:
+#     with st.chat_message(message["role"]):
+#         st.markdown(message["content"])
+
+# # User input for question
+# if question := st.chat_input("Ask your question about the reviews:"):
+#     if st.session_state.chain is not None:
+#         with st.chat_message("user"):
+#             st.markdown(question)
+#         st.session_state.chat_history.append({"role": "user", "content": question})
+        
+#         with st.chat_message("assistant"):
+#             response = st.session_state.chain({"question": question})
+#             st.markdown(response['answer'])
+#         st.session_state.chat_history.append({"role": "assistant", "content": response['answer']})
+#     else:
+#         st.warning("Please fetch reviews and enter your API key first.")
+
 import streamlit as st
-import re
-import altair as alt
-import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from wordcloud import WordCloud
 from review_scraper import get_app_reviews_dataframe, Sort
-from data_preprocessing import clean_dataframe , extract_app_id
+from data_preprocessing import clean_dataframe, extract_app_id
+import requests
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.vectorstores import Chroma
 
+# Initialize session state
+if 'clean_data' not in st.session_state:
+    st.session_state.clean_data = None
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
 
+# Function to create embeddings
+def create_embeddings(dataframe):
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    texts = dataframe.apply(lambda row: ' '.join(row.values.astype(str)), axis=1).tolist()
+    return texts, embeddings
 
+# Function to set up the vector store
+def setup_vector_store(dataframe):
+    texts, embeddings = create_embeddings(dataframe)
+    vector_store = Chroma.from_texts(texts, embeddings)
+    return vector_store.as_retriever()
+
+# Function to query Together.ai API
+def query_together_ai(api_key, question, context):
+    url = "https://api.together.xyz/inference"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "togethercomputer/llama-2-70b-chat",
+        "prompt": f"Given the following context about app reviews: {context}\n\nHuman: {question}\n\nAssistant:",
+        "max_tokens": 512,
+        "temperature": 0.7,
+        "top_p": 0.7,
+        "top_k": 50,
+        "repetition_penalty": 1,
+        "stop": ["Human:", "\n\nHuman:"]
+    }
+    response = requests.post(url, json=data, headers=headers)
+    if response.status_code == 200:
+        return response.json()['output']['choices'][0]['text'].strip()
+    else:
+        return f"Error: {response.status_code}, {response.text}"
+
+# Streamlit UI
 st.title("App Reviews Research: Understanding User Feedback and Sentiment")
 
-# Text input
-App = st.text_input("Enter the google play store app URL to scrape the reviews:")
-
-# app_id=extract_app_id(App)
+# Text input for app URL
+App = st.text_input("Enter the Google Play Store app URL to scrape the reviews:")
 
 if st.button("Fetch Reviews"):
- app_id=extract_app_id(App)
- if app_id:
-  st.write(f"Fetching reviews for {app_id}...")
-            
-  df = get_app_reviews_dataframe(
-                app_id,
-                reviews_count=25000,
-                lang='en',
-                country='in',
-                sort=Sort.NEWEST,
-                sleep_milliseconds=100
-            )
-            
-  st.write(f"Total reviews fetched: {len(df)}")
-            
-  average_score = df['score'].mean()
-  st.write(f"\nAverage Rating: {average_score:.2f}")
+    app_id = extract_app_id(App)
+    if app_id:
+        st.write(f"Fetching reviews for {app_id}...")
+        df = get_app_reviews_dataframe(
+            app_id,
+            reviews_count=25000,
+            lang='en',
+            country='in',
+            sort=Sort.NEWEST,
+            sleep_milliseconds=100
+        )
+        st.write(f"Total reviews fetched: {len(df)}")
+        average_score = df['score'].mean()
+        st.write(f"\nAverage Rating: {average_score:.2f}")
+        
+        # Clean the data and store it in session state
+        st.session_state.clean_data = clean_dataframe(df)
+        
+        # Set up vector store
+        st.session_state.retriever = setup_vector_store(st.session_state.clean_data)
+        
+        # Option to download the full DataFrame
+        csv = st.session_state.clean_data[['reviewid', 'content', 'score', 'appversion']].to_csv(index=False)
+        st.download_button(
+            label="Download full data as CSV",
+            data=csv,
+            file_name=f"{app_id}_reviews.csv",
+            mime="text/csv",
+        )
+    else:
+        st.error("Please enter a valid app ID")
 
-  clean_data= clean_dataframe(df)
+# User input for API key (masked)
+user_api_key = st.text_input("Enter your Together.ai API Key (will be masked):", type="password")
 
-  # Option to download the full DataFrame
-  csv = clean_data[['reviewid','content','score','appversion']].to_csv(index=False)
-  st.download_button(
-      label="Download full data as CSV",
-      data=csv,
-      file_name=f"{app_id}_reviews.csv",
-      mime="text/csv",
-  )
-else:
-   st.error("Please enter an app ID")
+# Display chat history
+for message in st.session_state.chat_history:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-# Sidebar content
-st.sidebar.title("Leveraging User Insights for Product Innovation")
-
-st.sidebar.write(
-    "User reviews offer valuable insights into what works well and what doesn’t. By carefully examining this feedback, product managers can uncover key strengths and weaknesses of their products, allowing them to enhance successful features and address any pain points to improve overall user satisfaction"
-)
-
-st.sidebar.write("---")
-
-st.sidebar.write(
-    "To learn more about how this project was done, visit [our website](https://www.yourwebsite.com)."
-)
-
-
-
-score_counts = clean_data['score'].value_counts().reset_index()
-score_counts.columns = ['score', 'count']
-
-# Check if DataFrame is not empty
-if not score_counts.empty:
-    # Create a bar chart with Plotly
-    fig = px.bar(score_counts, x='score', y='count', title='Rating Distributions')
-    fig.update_layout(
-        xaxis_title='Ratings',
-        yaxis_title='Count'
-    )
-
-    # Plot the bar chart
-    st.plotly_chart(fig)
-else:
-   st.write("No data available to display the chart.")
-
-negative_rated_combined_text = clean_data[clean_data['score']<3]['content'].str.cat(sep=' ') 
-positive_rated_combined_text = clean_data[clean_data['score']>3]['content'].str.cat(sep=' ') 
-
-wordcloud_neg = WordCloud(width=800, height=400, background_color='white').generate(negative_rated_combined_text)
-
-# Convert the word cloud to an image
-image = wordcloud_neg.to_image()
-
-# Convert the image to a numpy array
-img_array = np.array(image)
-
-# Plot the image with Plotly
-fig = go.Figure()
-
-fig.add_trace(
-    go.Image(z=img_array)
-)
-
-# Set layout for the plot
-fig.update_layout(
-    title='Reviews Word Cloud for negative sentiment',
-    xaxis=dict(showgrid=False, zeroline=False),
-    yaxis=dict(showgrid=False, zeroline=False),
-   
-)
-
-# Display the plot in Streamlit
-st.plotly_chart(fig)
-
-wordcloud_pos = WordCloud(width=800, height=400, background_color='white').generate(positive_rated_combined_text)
-
-# Convert the word cloud to an image
-image_p = wordcloud_neg.to_image()
-
-# Convert the image to a numpy array
-img_array = np.array(image_p)
-
-# Plot the image with Plotly
-fig = go.Figure()
-
-fig.add_trace(
-    go.Image(z=img_array)
-)
-
-# Set layout for the plot
-fig.update_layout(
-    title='Reviews Word Cloud for positive sentiment',
-    xaxis=dict(showgrid=False, zeroline=False),
-    yaxis=dict(showgrid=False, zeroline=False),
-   
-)
-
-# Display the plot in Streamlit
-st.plotly_chart(fig)
-
+# User input for question
+if question := st.chat_input("Ask your question about the reviews:"):
+    if user_api_key and st.session_state.clean_data is not None:
+        with st.chat_message("user"):
+            st.markdown(question)
+        st.session_state.chat_history.append({"role": "user", "content": question})
+        
+        # Retrieve relevant context
+        relevant_docs = st.session_state.retriever.get_relevant_documents(question)
+        context = "\n".join([doc.page_content for doc in relevant_docs])
+        
+        with st.chat_message("assistant"):
+            response = query_together_ai(user_api_key, question, context)
+            st.markdown(response)
+        st.session_state.chat_history.append({"role": "assistant", "content": response})
+    else:
+        st.warning("Please fetch reviews and enter your Together.ai API key first.")

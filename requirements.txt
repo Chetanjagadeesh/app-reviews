@@ -7,3 +7,11 @@ altair
 plotly
 wordcloud
 numpy
+langchain
+openai
+langchain_openai 
+langchain-community
+transformers
+sentence-transformers
+chromadb
+scikit-learn
