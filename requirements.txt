@@ -15,4 +15,4 @@ transformers
 sentence-transformers
 chromadb
 scikit-learn
-together
+protobuf==3.20.1
