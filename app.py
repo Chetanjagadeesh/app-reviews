@@ -190,33 +190,31 @@ import streamlit as st
 import pandas as pd
 from review_scraper import get_app_reviews_dataframe, Sort
 from data_preprocessing import clean_dataframe, extract_app_id
-from langchain_openai import ChatOpenAI
-from langchain.chains import ConversationalRetrievalChain
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
+from together import Together
 
 # Initialize session state for clean_data
 if 'clean_data' not in st.session_state:
     st.session_state.clean_data = None
 
-# Function to create embeddings
-def create_embeddings(dataframe, api_key):
-    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+# Function to create embeddings (if needed for Together AI)
+def create_embeddings(dataframe):
     texts = dataframe.apply(lambda row: ' '.join(row.values.astype(str)), axis=1).tolist()
-    return texts, embeddings.embed_documents(texts)
+    return texts
 
-# Function to set up the vector store
-def setup_vector_store(dataframe, api_key):
-    texts, embeddings = create_embeddings(dataframe, api_key)
-    vector_store = Chroma.from_texts(texts, embeddings)
-    return vector_store.as_retriever()
+# Function to set up the vector store (if needed for Together AI)
+def setup_vector_store(dataframe):
+    texts = create_embeddings(dataframe)
+    # Assuming Together AI provides a way to create embeddings
+    # This is a placeholder for actual Together AI embedding logic
+    embeddings = []  # Replace with actual embedding logic
+    return embeddings
 
 # Function to create the conversational retrieval chain
 def make_chain(dataframe, api_key):
-    model = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.0, openai_api_key=api_key)
-    retriever = setup_vector_store(dataframe, api_key)
-    chain = ConversationalRetrievalChain.from_llm(model, retriever=retriever)
-    return chain
+    client = Together(api_key=api_key)
+    # Assuming Together AI has a similar chain setup
+    # This is a placeholder for actual Together AI chain logic
+    return client
 
 # Streamlit UI
 st.title("App Reviews Research: Understanding User Feedback and Sentiment")
@@ -254,18 +252,21 @@ if st.button("Fetch Reviews"):
     else:
         st.error("Please enter a valid app ID")
 
-# User input for API key (masked)
-user_api_key = st.text_input("Enter your OpenAI API Key (will be masked):", type="password")
+# User input for Together AI API key (masked)
+user_api_key = st.text_input("Enter your Together AI API Key (will be masked):", type="password")
 
 # User input for question
 question = st.text_input("Ask your question:")
 
 if st.button("Submit"):
     if question and user_api_key:
-        if st.session_state.clean_data is not None: # Check if clean_data is defined
-            chain = make_chain(st.session_state.clean_data, user_api_key) # Use the user-provided API key
-            response = chain({"question": question, "chat_history": ""})
-            st.write(f"Chatbot response: {response['answer']}")
+        if st.session_state.clean_data is not None:  # Check if clean_data is defined
+            client = Together(api_key=user_api_key)
+            response = client.chat.completions.create(
+                model="meta-llama/Llama-3-70b-chat-hf",  # Example model
+                messages=[{"role": "user", "content": question}]
+            )
+            st.write(f"Chatbot response: {response.choices[0].message.content}")
         else:
             st.warning("Please fetch reviews first.")
     else:

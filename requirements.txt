@@ -15,3 +15,4 @@ transformers
 sentence-transformers
 chromadb
 scikit-learn
+together
