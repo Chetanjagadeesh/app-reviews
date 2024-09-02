@@ -1,5 +1,5 @@
 google-play-scraper
-tqdm 
+tqdm
 streamlit
 pandas
 matplotlib
@@ -9,7 +9,7 @@ wordcloud
 numpy
 langchain
 openai
-langchain_openai 
+langchain_openai
 langchain-community
 transformers
 sentence-transformers

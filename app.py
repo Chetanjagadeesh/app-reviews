@@ -194,6 +194,7 @@ from data_preprocessing import clean_dataframe, extract_app_id
 import requests
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import Chroma
+from langchain.vectorstores import FAISS
 
 # Initialize session state
 if 'clean_data' not in st.session_state:
@@ -210,7 +211,7 @@ def create_embeddings(dataframe):
 # Function to set up the vector store
 def setup_vector_store(dataframe):
     texts, embeddings = create_embeddings(dataframe)
-    vector_store = Chroma.from_texts(texts, embeddings)
+    vector_store = FAISS.from_texts(texts, embeddings)
     return vector_store.as_retriever()
 
 # Function to query Together.ai API
