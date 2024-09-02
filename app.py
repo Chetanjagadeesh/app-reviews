@@ -186,56 +186,37 @@
 #         st.session_state.chat_history.append({"role": "assistant", "content": response['answer']})
 #     else:
 #         st.warning("Please fetch reviews and enter your API key first.")
-
 import streamlit as st
 import pandas as pd
 from review_scraper import get_app_reviews_dataframe, Sort
 from data_preprocessing import clean_dataframe, extract_app_id
-import requests
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_openai import ChatOpenAI
+from langchain.chains import ConversationalRetrievalChain
+from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
-from langchain.vectorstores import FAISS
 
-# Initialize session state
+# Initialize session state for clean_data
 if 'clean_data' not in st.session_state:
     st.session_state.clean_data = None
-if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
 
 # Function to create embeddings
-def create_embeddings(dataframe):
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+def create_embeddings(dataframe, api_key):
+    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
     texts = dataframe.apply(lambda row: ' '.join(row.values.astype(str)), axis=1).tolist()
-    return texts, embeddings
+    return texts, embeddings.embed_documents(texts)
 
 # Function to set up the vector store
-def setup_vector_store(dataframe):
-    texts, embeddings = create_embeddings(dataframe)
-    vector_store = FAISS.from_texts(texts, embeddings)
+def setup_vector_store(dataframe, api_key):
+    texts, embeddings = create_embeddings(dataframe, api_key)
+    vector_store = Chroma.from_texts(texts, embeddings)
     return vector_store.as_retriever()
 
-# Function to query Together.ai API
-def query_together_ai(api_key, question, context):
-    url = "https://api.together.xyz/inference"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "model": "togethercomputer/llama-2-70b-chat",
-        "prompt": f"Given the following context about app reviews: {context}\n\nHuman: {question}\n\nAssistant:",
-        "max_tokens": 512,
-        "temperature": 0.7,
-        "top_p": 0.7,
-        "top_k": 50,
-        "repetition_penalty": 1,
-        "stop": ["Human:", "\n\nHuman:"]
-    }
-    response = requests.post(url, json=data, headers=headers)
-    if response.status_code == 200:
-        return response.json()['output']['choices'][0]['text'].strip()
-    else:
-        return f"Error: {response.status_code}, {response.text}"
+# Function to create the conversational retrieval chain
+def make_chain(dataframe, api_key):
+    model = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.0, openai_api_key=api_key)
+    retriever = setup_vector_store(dataframe, api_key)
+    chain = ConversationalRetrievalChain.from_llm(model, retriever=retriever)
+    return chain
 
 # Streamlit UI
 st.title("App Reviews Research: Understanding User Feedback and Sentiment")
@@ -258,13 +239,10 @@ if st.button("Fetch Reviews"):
         st.write(f"Total reviews fetched: {len(df)}")
         average_score = df['score'].mean()
         st.write(f"\nAverage Rating: {average_score:.2f}")
-        
+
         # Clean the data and store it in session state
         st.session_state.clean_data = clean_dataframe(df)
-        
-        # Set up vector store
-        st.session_state.retriever = setup_vector_store(st.session_state.clean_data)
-        
+
         # Option to download the full DataFrame
         csv = st.session_state.clean_data[['reviewid', 'content', 'score', 'appversion']].to_csv(index=False)
         st.download_button(
@@ -277,27 +255,18 @@ if st.button("Fetch Reviews"):
         st.error("Please enter a valid app ID")
 
 # User input for API key (masked)
-user_api_key = st.text_input("Enter your Together.ai API Key (will be masked):", type="password")
-
-# Display chat history
-for message in st.session_state.chat_history:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+user_api_key = st.text_input("Enter your OpenAI API Key (will be masked):", type="password")
 
 # User input for question
-if question := st.chat_input("Ask your question about the reviews:"):
-    if user_api_key and st.session_state.clean_data is not None:
-        with st.chat_message("user"):
-            st.markdown(question)
-        st.session_state.chat_history.append({"role": "user", "content": question})
-        
-        # Retrieve relevant context
-        relevant_docs = st.session_state.retriever.get_relevant_documents(question)
-        context = "\n".join([doc.page_content for doc in relevant_docs])
-        
-        with st.chat_message("assistant"):
-            response = query_together_ai(user_api_key, question, context)
-            st.markdown(response)
-        st.session_state.chat_history.append({"role": "assistant", "content": response})
+question = st.text_input("Ask your question:")
+
+if st.button("Submit"):
+    if question and user_api_key:
+        if st.session_state.clean_data is not None: # Check if clean_data is defined
+            chain = make_chain(st.session_state.clean_data, user_api_key) # Use the user-provided API key
+            response = chain({"question": question, "chat_history": ""})
+            st.write(f"Chatbot response: {response['answer']}")
+        else:
+            st.warning("Please fetch reviews first.")
     else:
-        st.warning("Please fetch reviews and enter your Together.ai API key first.")
+        st.warning("Please enter both your API key and a question.")
