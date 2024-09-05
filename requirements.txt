@@ -11,8 +11,9 @@ langchain
 openai
 langchain_openai
 langchain-community
-transformers
-sentence-transformers
 chromadb
 scikit-learn
 protobuf==3.20.1
+torch>=2.0.0
+transformers>=4.30.0
+sentence-transformers>=2.2.2
