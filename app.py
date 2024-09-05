@@ -88,14 +88,17 @@
 #         st.warning("Please enter both your API key and a question.")
 import streamlit as st
 import pandas as pd
+import numpy as np
 from review_scraper import get_app_reviews_dataframe, Sort
 from data_preprocessing import clean_dataframe, extract_app_id
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-from sentence_transformers import SentenceTransformer
-from langchain.vectorstores import Chroma
+from langchain_openai import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
-from langchain.llms import HuggingFacePipeline
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.memory import ConversationBufferMemory
+from openai import OpenAIError
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 # Initialize session state
 if 'clean_data' not in st.session_state:
@@ -104,31 +107,57 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'chain' not in st.session_state:
     st.session_state.chain = None
+if 'use_fallback' not in st.session_state:
+    st.session_state.use_fallback = False
 
-@st.cache_resource
-def load_model():
-    tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.1")
-    model = AutoModelForCausalLM.from_pretrained("mistralai/Mistral-7B-Instruct-v0.1")
-    return tokenizer, model
+class FallbackEmbeddings:
+    def __init__(self, texts):
+        self.vectorizer = TfidfVectorizer()
+        self.vectors = self.vectorizer.fit_transform(texts)
 
-def create_embeddings(dataframe):
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    def embed_documents(self, texts):
+        return self.vectorizer.transform(texts).toarray()
+
+    def embed_query(self, text):
+        return self.vectorizer.transform([text]).toarray()[0]
+
+def create_embeddings(dataframe, api_key):
     texts = dataframe.apply(lambda row: ' '.join(row.values.astype(str)), axis=1).tolist()
-    embeddings = model.encode(texts)
-    return texts, embeddings
+    try:
+        if not st.session_state.use_fallback:
+            embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+            embedded_texts = embeddings.embed_documents(texts)
+            return texts, embedded_texts, embeddings
+        else:
+            raise OpenAIError("Using fallback method")
+    except OpenAIError as e:
+        st.warning(f"Using fallback method for embeddings due to API error: {str(e)}")
+        st.session_state.use_fallback = True
+        fallback_embeddings = FallbackEmbeddings(texts)
+        embedded_texts = fallback_embeddings.embed_documents(texts)
+        return texts, embedded_texts, fallback_embeddings
 
-def setup_vector_store(dataframe):
-    texts, embeddings = create_embeddings(dataframe)
-    vector_store = Chroma.from_texts(texts, HuggingFaceEmbeddings())
-    return vector_store.as_retriever()
+def setup_vector_store(dataframe, api_key):
+    texts, embedded_texts, embeddings = create_embeddings(dataframe, api_key)
+    if texts and embedded_texts:
+        vector_store = Chroma.from_texts(texts, embeddings)
+        return vector_store.as_retriever()
+    return None
 
-def make_chain(dataframe):
-    tokenizer, model = load_model()
-    llm_pipeline = pipeline("text-generation", model=model, tokenizer=tokenizer, device=0)
-    llm = HuggingFacePipeline(pipeline=llm_pipeline)
-    retriever = setup_vector_store(dataframe)
-    chain = ConversationalRetrievalChain.from_llm(llm, retriever=retriever)
-    return chain
+def make_chain(dataframe, api_key):
+    try:
+        model = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.0, openai_api_key=api_key)
+        retriever = setup_vector_store(dataframe, api_key)
+        if retriever:
+            memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+            chain = ConversationalRetrievalChain.from_llm(model, retriever=retriever, memory=memory)
+            return chain
+        else:
+            st.error("Failed to set up the retriever. Please check your API key and try again.")
+            return None
+    except OpenAIError as e:
+        st.error(f"Error creating the AI model: {str(e)}")
+        return None
 
 def display_review_stats(df):
     st.subheader("Review Statistics")
@@ -182,6 +211,15 @@ with st.sidebar:
         else:
             st.error("Please enter a valid app URL")
 
+    # User input for API key (masked)
+    user_api_key = st.text_input("Enter your OpenAI API Key:", type="password")
+    if user_api_key and st.session_state.clean_data is not None:
+        if st.session_state.chain is None:
+            with st.spinner("Initializing AI model..."):
+                st.session_state.chain = make_chain(st.session_state.clean_data, user_api_key)
+            if st.session_state.chain:
+                st.success("AI model initialized and ready!")
+
 # Main content area
 if st.session_state.clean_data is not None:
     display_review_stats(st.session_state.clean_data)
@@ -196,27 +234,27 @@ if st.session_state.clean_data is not None:
 
     # User input for question
     if question := st.chat_input("Ask your question about the reviews:"):
-        if st.session_state.chain is None:
-            with st.spinner("Initializing AI model..."):
-                st.session_state.chain = make_chain(st.session_state.clean_data)
-            if st.session_state.chain:
-                st.success("AI model initialized and ready!")
-
         if st.session_state.chain is not None:
             with st.chat_message("user"):
                 st.markdown(question)
             st.session_state.chat_history.append({"role": "user", "content": question})
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
-                    response = st.session_state.chain({"question": question})
-                    st.markdown(response['answer'])
-                    st.session_state.chat_history.append({"role": "assistant", "content": response['answer']})
+                    try:
+                        response = st.session_state.chain({"question": question})
+                        st.markdown(response['answer'])
+                        st.session_state.chat_history.append({"role": "assistant", "content": response['answer']})
+                    except OpenAIError as e:
+                        error_message = f"Error: {str(e)}"
+                        st.error(error_message)
+                        st.session_state.chat_history.append({"role": "assistant", "content": error_message})
         else:
-            st.warning("Please fetch reviews first.")
+            st.warning("Please enter your API key in the sidebar first.")
 
-    # Add a button to clear chat history
-    if st.button("Clear Chat History"):
+    # Add a button to clear chat history and reset fallback
+    if st.button("Clear Chat History and Reset"):
         st.session_state.chat_history = []
+        st.session_state.use_fallback = False
         st.experimental_rerun()
 else:
     st.info("Please fetch reviews using the sidebar to start analyzing.")
